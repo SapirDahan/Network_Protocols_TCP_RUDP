@@ -1,0 +1,3 @@
+/home/parallels/CLionProjects/Networks_Project3/cmake-build-debug/CMakeFiles/Networks_Project3.dir
+/home/parallels/CLionProjects/Networks_Project3/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/parallels/CLionProjects/Networks_Project3/cmake-build-debug/CMakeFiles/rebuild_cache.dir

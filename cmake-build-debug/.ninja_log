@@ -1,0 +1,4 @@
+# ninja log v5
+0	20	1708165371749385633	CMakeFiles/Networks_Project3.dir/main.c.o	744d21818c8dba5b
+21	65	1708165371793385890	CMakeFiles/Networks_Project3.dir/TCP_Receiver.c.o	9df4c453b0dd09dd
+65	95	1708165371825386076	CMakeFiles/Networks_Project3.dir/TCP_Sender.c.o	aa28dc741ac8c948
