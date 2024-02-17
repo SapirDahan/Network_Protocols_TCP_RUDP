@@ -7,6 +7,7 @@
 #include <netinet/tcp.h>
 
 #define BUFFER_SIZE 2048
+#define EXIT_MESSAGE "exit"
 
 int main(int argc, char *argv[]) {
     if (argc != 5) {
@@ -64,15 +65,34 @@ int main(int argc, char *argv[]) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_received;
     ssize_t total_received = 0;
+    int run_number = 1;
 
     // Receive data until the sender closes the connection
-    while ((bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0)) > 0) {
+    while (1) {
+        bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
+
+        // Print run statists after a complete file received
+        if (bytes_received == 0 && total_received > 0) {
+            printf("Received Bytes: %zd\n", total_received);
+            printf("-Run #%d Data:", run_number);
+            run_number += 1;
+            total_received = 0;
+        }
+
+        // Check for the exit message
+        if (strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) == 0) {
+            printf("Exit message received. Closing connection.\n");
+            break; // Exit the loop to close the connection
+        }
+
         total_received += bytes_received;
     }
 
     if (bytes_received < 0) {
         perror("Receive failed");
-    } else {
+    }
+
+    else {
         printf("Total bytes received: %zd\n", total_received);
     }
 

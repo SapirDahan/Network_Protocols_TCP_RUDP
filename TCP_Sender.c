@@ -7,10 +7,12 @@
 #include <unistd.h>
 #include <netinet/tcp.h>
 #include <time.h>
+#include <errno.h>
 
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+#define SIZE_OF_FILE 2097153 // Size of the file (2MB)
+#define EXIT_MESSAGE "exit"
 
 // Function to generate a random alphanumeric character
 char random_alphanumeric() {
@@ -87,21 +89,44 @@ int main(int argc, char *argv[]) {
     char buffer[BUFFER_SIZE];
     memset(buffer, 'A', BUFFER_SIZE); // Dummy data for example purposes
 
-    // Send data in chunks until you reach the desired file size
-    ssize_t total_sent = 0;
-    ssize_t bytes_sent;
-    size_t file_size = 2 * 1024 * 1024; // 2MB file size as required
-
-    while (total_sent < file_size) {
-        bytes_sent = send(sockfd, buffer, BUFFER_SIZE, 0);
-        if (bytes_sent < 0) {
-            perror("Error sending data");
-            break;
-        }
-        total_sent += bytes_sent;
+    // Open file for reading
+    FILE *file_to_read = fopen("random_generated_file.txt", "rb");
+    if (file_to_read == NULL) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
     }
 
-    printf("Total bytes sent: %zd\n", total_sent);
+    // Send data in chunks until you reach the desired file size
+    ssize_t total_sent;
+    ssize_t bytes_sent;
+    ssize_t bytes_read;
+    char send_again;
+
+    do {
+
+        total_sent = 0;
+
+        while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file_to_read)) > 0) {
+            bytes_sent = send(sockfd, buffer, bytes_read, 0);
+            total_sent += bytes_sent;
+
+            if (bytes_sent < 0) {
+                perror("Error sending data");
+                break;
+            }
+        }
+
+        rewind(file_to_read);
+        printf("Total bytes sent: %zd\n", total_sent);
+        printf("Send again? (y/n): ");
+        scanf("%s", &send_again);
+
+    } while(send_again == 'y');
+
+    // Send the exit message to the server
+    if (send(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0) < 0) {
+        perror("Could not send a exit message");
+    }
 
     close(sockfd);
     return 0;
