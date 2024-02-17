@@ -12,7 +12,9 @@
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
 #define SIZE_OF_FILE 2097153 // Size of the file (2MB)
-#define EXIT_MESSAGE "exit"
+//#define SIZE_OF_FILE 2097150
+#define EXIT_MESSAGE "<exit>"
+#define EOF_MESSAGE "<eof>"
 
 // Function to generate a random alphanumeric character
 char random_alphanumeric() {
@@ -120,6 +122,12 @@ int main(int argc, char *argv[]) {
         printf("Total bytes sent: %zd\n", total_sent);
         printf("Send again? (y/n): ");
         scanf("%s", &send_again);
+
+        // Send the end of file message to the server
+        if (send(sockfd, EOF_MESSAGE, strlen(EOF_MESSAGE), 0) < 0) {
+            perror("Could not send a exit message");
+        }
+
 
     } while(send_again == 'y');
 

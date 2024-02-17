@@ -5,9 +5,16 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/tcp.h>
+#include <sys/time.h>
 
 #define BUFFER_SIZE 2048
-#define EXIT_MESSAGE "exit"
+#define EXIT_MESSAGE "<eof><exit>"
+#define EOF_MESSAGE "<eof>"
+
+// Function to calculate the difference in time between start and end
+double time_diff(struct timeval start, struct timeval end) {
+    return (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_usec - start.tv_usec) / 1000.0;
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 5) {
@@ -45,7 +52,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    listen(sockfd, 10);
+    listen(sockfd, 1);
 
     int new_sockfd = accept(sockfd, NULL, NULL);
     if (new_sockfd < 0) {
@@ -65,18 +72,20 @@ int main(int argc, char *argv[]) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_received;
     ssize_t total_received = 0;
+    long all_run_receive = 0;
     int run_number = 1;
+    struct timeval start, end;
+    double time;
+    double total_time = 0;
 
+    printf("----------------------------------\n");
+    printf("-         * Statistics *         -\n");
     // Receive data until the sender closes the connection
     while (1) {
         bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
 
-        // Print run statists after a complete file received
-        if (bytes_received == 0 && total_received > 0) {
-            printf("Received Bytes: %zd\n", total_received);
-            printf("-Run #%d Data:", run_number);
-            run_number += 1;
-            total_received = 0;
+        if(total_received == 0 && bytes_received > 0){
+            gettimeofday(&start, NULL);
         }
 
         // Check for the exit message
@@ -85,7 +94,22 @@ int main(int argc, char *argv[]) {
             break; // Exit the loop to close the connection
         }
 
+
+        if (strncmp(buffer, EOF_MESSAGE, strlen(EOF_MESSAGE)) == 0 && total_received > 0) {
+            gettimeofday(&end, NULL);
+            time = time_diff(start, end);
+            total_time += time;
+            printf("- Run #%d Data: Time: %.2f ms; Speed: %.2f MB/s\n", run_number, time, (double)total_received/(time*1000));
+            //printf("- Total Received: %zd\n", total_received);
+
+            run_number += 1;
+            total_received = 0;
+            bytes_received = 0;
+        }
+
+
         total_received += bytes_received;
+        all_run_receive += bytes_received;
     }
 
     if (bytes_received < 0) {
@@ -93,8 +117,13 @@ int main(int argc, char *argv[]) {
     }
 
     else {
-        printf("Total bytes received: %zd\n", total_received);
+        printf("Averages shall be printed here\n");
     }
+
+    printf("- Average time: %.2f ms\n", total_time/run_number);
+    printf("- Average bandwidth: %.2f MB/s\n", (double)all_run_receive/(total_time*1000));
+    printf("----------------------------------\n");
+    printf("Receiver ended\n");
 
     close(new_sockfd);
     close(sockfd);
