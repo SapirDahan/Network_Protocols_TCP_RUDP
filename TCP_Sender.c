@@ -11,8 +11,8 @@
 
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-#define SIZE_OF_FILE 2097153 // Size of the file (2MB)
-//#define SIZE_OF_FILE 2097150
+// #define SIZE_OF_FILE 2097153 // Size of the file (2MB)
+#define SIZE_OF_FILE 32769 // Size of the file (32K)
 #define EXIT_MESSAGE "<exit>"
 #define EOF_MESSAGE "<eof>"
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     char *algo = NULL;
 
     // Parse command line arguments
-    for (int i = 1; i < argc; i += 2) {
+    for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-ip") == 0) {
             ip = argv[i + 1];
         } else if (strcmp(argv[i], "-p") == 0) {
@@ -108,28 +108,31 @@ int main(int argc, char *argv[]) {
 
         total_sent = 0;
 
-        while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file_to_read)) > 0) {
+        while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file_to_read)) > 0) {
             bytes_sent = send(sockfd, buffer, bytes_read, 0);
             total_sent += bytes_sent;
-
             if (bytes_sent < 0) {
                 perror("Error sending data");
                 break;
             }
         }
 
-        rewind(file_to_read);
+        //rewind(file_to_read);
+        fseek(file_to_read, 0, SEEK_SET);
         printf("Total bytes sent: %zd\n", total_sent);
         printf("Send again? (y/n): ");
         scanf("%s", &send_again);
 
-        // Send the end of file message to the server
-        if (send(sockfd, EOF_MESSAGE, strlen(EOF_MESSAGE), 0) < 0) {
-            perror("Could not send a exit message");
+        if(send_again == 'y' || send_again == 'Y'){
+            // Send the end of file message to the server
+            if (send(sockfd, EOF_MESSAGE, strlen(EOF_MESSAGE), 0) < 0) {
+                perror("Could not send a exit message");
+            }
         }
 
 
-    } while(send_again == 'y');
+
+    } while(send_again == 'y' || send_again == 'Y');
 
     // Send the exit message to the server
     if (send(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0) < 0) {

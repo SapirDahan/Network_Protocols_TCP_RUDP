@@ -8,7 +8,7 @@
 #include <sys/time.h>
 
 #define BUFFER_SIZE 2048
-#define EXIT_MESSAGE "<eof><exit>"
+#define EXIT_MESSAGE "<exit>"
 #define EOF_MESSAGE "<eof>"
 
 // Function to calculate the difference in time between start and end
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     char *algo = NULL;
 
     // Parse command line arguments
-    for (int i = 1; i < argc; i += 2) {
+    for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-p") == 0) {
             port = atoi(argv[i + 1]);
         } else if (strcmp(argv[i], "-algo") == 0) {
@@ -83,9 +83,25 @@ int main(int argc, char *argv[]) {
     // Receive data until the sender closes the connection
     while (1) {
         bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
-
+        printf("Bytes Received %zd\n", bytes_received);
         if(total_received == 0 && bytes_received > 0){
             gettimeofday(&start, NULL);
+        }
+
+        if ((strncmp(buffer, EOF_MESSAGE, strlen(EOF_MESSAGE)) == 0 ||
+                strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) == 0) && total_received > 0) {
+            gettimeofday(&end, NULL);
+            time = time_diff(start, end);
+            total_time += time;
+            printf("- Run #%d Data: Time: %.2f ms; Speed: %.2f MB/s\n", run_number, time, (double)total_received/(time*1000));
+            printf("- Total Received: %zd\n", total_received);
+
+            if(strncmp(buffer, EOF_MESSAGE, strlen(EOF_MESSAGE)) == 0){
+                run_number += 1;
+            }
+
+            total_received = 0;
+            bytes_received = 0;
         }
 
         // Check for the exit message
@@ -94,23 +110,10 @@ int main(int argc, char *argv[]) {
             break; // Exit the loop to close the connection
         }
 
-
-        if (strncmp(buffer, EOF_MESSAGE, strlen(EOF_MESSAGE)) == 0 && total_received > 0) {
-            gettimeofday(&end, NULL);
-            time = time_diff(start, end);
-            total_time += time;
-            printf("- Run #%d Data: Time: %.2f ms; Speed: %.2f MB/s\n", run_number, time, (double)total_received/(time*1000));
-            //printf("- Total Received: %zd\n", total_received);
-
-            run_number += 1;
-            total_received = 0;
-            bytes_received = 0;
-        }
-
-
         total_received += bytes_received;
         all_run_receive += bytes_received;
     }
+
 
     if (bytes_received < 0) {
         perror("Receive failed");
