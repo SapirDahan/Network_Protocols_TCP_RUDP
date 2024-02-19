@@ -9,7 +9,6 @@
 
 #define BUFFER_SIZE 2048
 #define EXIT_MESSAGE "<exit>"
-#define EOF_MESSAGE "<eof>"
 
 // Function to calculate the difference in time between start and end
 double time_diff(struct timeval start, struct timeval end) {
@@ -83,22 +82,30 @@ int main(int argc, char *argv[]) {
     // Receive data until the sender closes the connection
     while (1) {
         bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
-        printf("Bytes Received %zd\n", bytes_received);
+
         if(total_received == 0 && bytes_received > 0){
             gettimeofday(&start, NULL);
         }
 
-        if ((strncmp(buffer, EOF_MESSAGE, strlen(EOF_MESSAGE)) == 0 ||
-                strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) == 0) && total_received > 0) {
+        total_received += bytes_received;
+        all_run_receive += bytes_received;
+
+
+
+        char *isEOF = strchr(buffer, '!');
+        if(total_received>0){
+            //printf("%s", buffer);
+        }
+        if ((isEOF != NULL && total_received > 0) && strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) != 0) {
             gettimeofday(&end, NULL);
             time = time_diff(start, end);
             total_time += time;
-            printf("- Run #%d Data: Time: %.2f ms; Speed: %.2f MB/s\n", run_number, time, (double)total_received/(time*1000));
-            printf("- Total Received: %zd\n", total_received);
 
-            if(strncmp(buffer, EOF_MESSAGE, strlen(EOF_MESSAGE)) == 0){
-                run_number += 1;
-            }
+
+            printf("- Run #%d Data: Time: %.2f ms; Speed: %.2f MB/s\n", run_number, time, (double)total_received/(time*1000));
+
+            run_number += 1;
+
 
             total_received = 0;
             bytes_received = 0;
@@ -109,9 +116,6 @@ int main(int argc, char *argv[]) {
             printf("Exit message received. Closing connection.\n");
             break; // Exit the loop to close the connection
         }
-
-        total_received += bytes_received;
-        all_run_receive += bytes_received;
     }
 
 
@@ -123,7 +127,7 @@ int main(int argc, char *argv[]) {
         printf("Averages shall be printed here\n");
     }
 
-    printf("- Average time: %.2f ms\n", total_time/run_number);
+    printf("- Average time: %.2f ms\n", total_time/(run_number - 1));
     printf("- Average bandwidth: %.2f MB/s\n", (double)all_run_receive/(total_time*1000));
     printf("----------------------------------\n");
     printf("Receiver ended\n");

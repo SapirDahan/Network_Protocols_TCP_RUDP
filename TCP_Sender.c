@@ -14,7 +14,6 @@
 // #define SIZE_OF_FILE 2097153 // Size of the file (2MB)
 #define SIZE_OF_FILE 32769 // Size of the file (32K)
 #define EXIT_MESSAGE "<exit>"
-#define EOF_MESSAGE "<eof>"
 
 // Function to generate a random alphanumeric character
 char random_alphanumeric() {
@@ -35,9 +34,11 @@ int main(int argc, char *argv[]) {
     srand((unsigned int)time(NULL));
 
     // Generate random characters and write them to the file
-    for (int i = 0; i < SIZE_OF_FILE; i++) {
+    for (int i = 0; i < SIZE_OF_FILE - 2; i++) {
         fputc(random_alphanumeric(), file);
     }
+    fputc('!', file);
+    fputc('_', file);
 
     if (argc != 7) {
         fprintf(stderr, "Usage: ./TCP_Sender -ip IP -p PORT -algo ALGO\n");
@@ -122,15 +123,6 @@ int main(int argc, char *argv[]) {
         printf("Total bytes sent: %zd\n", total_sent);
         printf("Send again? (y/n): ");
         scanf("%s", &send_again);
-
-        if(send_again == 'y' || send_again == 'Y'){
-            // Send the end of file message to the server
-            if (send(sockfd, EOF_MESSAGE, strlen(EOF_MESSAGE), 0) < 0) {
-                perror("Could not send a exit message");
-            }
-        }
-
-
 
     } while(send_again == 'y' || send_again == 'Y');
 
