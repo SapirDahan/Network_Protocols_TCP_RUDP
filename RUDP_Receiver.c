@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
     // Receive data until the sender closes the connection
     while (1) {
         // Receive from the sender
-        bytes_received = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &my_addr);
+        bytes_received = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &addr_size);
 
         //Start to count for start
         if(total_received == 0 && bytes_received > 0){

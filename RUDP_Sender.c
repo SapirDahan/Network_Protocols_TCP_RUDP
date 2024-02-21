@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
     } while(send_again == 'y' || send_again == 'Y');
 
     // Send the exit message to the server
-    if (send(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0) < 0) {
+    if (sendto(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
         perror("Could not send a exit message\n");
         return EXIT_FAILURE;
     }
