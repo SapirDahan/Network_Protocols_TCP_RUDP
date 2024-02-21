@@ -5,4 +5,6 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(Networks_Project3 main.c
         TCP_Receiver.c
-        TCP_Sender.c)
+        TCP_Sender.c
+        RUDP_Sender.c
+        RUDP_Receiver.c)
