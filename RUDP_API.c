@@ -59,8 +59,14 @@ unsigned short int calculate_checksum(void *data, unsigned int bytes) {
 
 int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
 
-    char* bytes01 = int_to_2_chars((int)len);
-    char* bytes23 = int_to_2_chars((int) calculate_checksum((void*)buf, len));
+//    char* bytes01 = int_to_2_chars((int)len);
+//    char* bytes23 = int_to_2_chars((int) calculate_checksum((void*)buf, len));
+//
+//    char new_buffer[2052];
+
+//    strcpy(new_buffer, bytes01);
+//    strcat(new_buffer, bytes23);
+//    strcat(new_buffer, buf);
 
     int bytes_sent = sendto(sockfd, buf, len, flags, dest_addr, addrlen);
     if (bytes_sent == -1) {
@@ -81,6 +87,8 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags,
 int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_addr, int BUFFER_SIZE){
     int client_seq = 0;
     int server_seq = 0;
+
+    printf("Three-Way Handshake has started.\n");
 
     // Generate initial client sequence number
     srand(time(NULL));
@@ -108,9 +116,11 @@ int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_add
     printf("Sender sent: %s\n", buffer);
 
     if(client_seq_recv == client_seq + 1){
+        printf("Three-Way Handshake is completed successfully.\n");
         return 1;
     }
     else{
+        printf("Three-Way Handshake has failed.\n");
         return 0;
     }
 
@@ -119,6 +129,8 @@ int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_add
 int hand_shake_recv(char * buffer, int sockfd, const struct sockaddr_in sender_addr, int BUFFER_SIZE){
     int client_seq = 0;
     int server_seq = 0;
+
+    printf("Three-Way Handshake has started.\n");
 
     // Generate initial server sequence number
     srand(time(NULL));
@@ -146,10 +158,12 @@ int hand_shake_recv(char * buffer, int sockfd, const struct sockaddr_in sender_a
     sscanf(type, "<ACK %d>", &server_seq_recv);
 
     if(server_seq + 1 == server_seq_recv){
+        printf("Three-Way Handshake is completed successfully.\n");
         return 1;
     }
     else{
-       return 0;
+        printf("Three-Way Handshake has failed.\n");
+        return 0;
    }
 }
 

@@ -14,8 +14,8 @@ int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_add
 void rudp_close(int sockfd);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-#define SIZE_OF_FILE 2097153 // Size of the file (2MB)
-
+// #define SIZE_OF_FILE 2097153 // Size of the file (2MB)
+#define SIZE_OF_FILE 4096 // experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 
 // Function to generate a random alphanumeric character only with letters and numbers
@@ -38,13 +38,13 @@ int main(int argc, char *argv[]) {
     srand((unsigned int)time(NULL));
 
     // Generate random characters and write them to the file
-    for (int i = 0; i < SIZE_OF_FILE - 2; i++) {
+    for (int i = 0; i < SIZE_OF_FILE - 1; i++) {
         fputc(random_alphanumeric(), file);
     }
 
     //the end of file
     fputc('!', file);
-    fputc(' ', file);
+    fclose(file);
 
     //We are supposed to get 5 arguments from the user
     if (argc != 5) {
@@ -155,6 +155,9 @@ int main(int argc, char *argv[]) {
 
     //Close the socket
     rudp_close(sockfd);
+
+    //Close the file
+    fclose(file);
 
     printf("Sender end\n");
 
