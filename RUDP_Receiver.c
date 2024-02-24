@@ -4,8 +4,14 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <netinet/tcp.h>
 #include <sys/time.h>
+
+int rudp_socket(int domain, int type, int protocol);
+ssize_t rudp_send(int sockfd, char* buffer, ssize_t bytes_read, int flag, const struct sockaddr *addr, socklen_t addr_len);
+int rudp_recv(int sockfd, void *buf, size_t len, int flags,
+              struct sockaddr *src_addr, socklen_t *addrlen);
+int hand_shake_recv(char * buffer, int sockfd, const struct sockaddr_in sender_addr, int BUFFER_SIZE);
+void rudp_close(int sockfd);
 
 #define BUFFER_SIZE 2048 // The size of the buffer
 #define EXIT_MESSAGE "<exit>" // The exit massage
@@ -34,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     // Opening socket using IPV4
     printf("Starting Receiver...\n");
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int sockfd = rudp_socket(AF_INET, SOCK_DGRAM, 0);
 
     //Problem opening the socket
     if (sockfd < 0) {
@@ -60,6 +66,8 @@ int main(int argc, char *argv[]) {
 
     char buffer[BUFFER_SIZE]; // An array with the buffer size
 
+    while(hand_shake_recv(buffer, sockfd, client_addr, BUFFER_SIZE) == 0){}
+
     ssize_t bytes_received;
     ssize_t total_received = 0;
 
@@ -78,7 +86,7 @@ int main(int argc, char *argv[]) {
     // Receive data until the sender closes the connection
     while (1) {
         // Receive from the sender
-        bytes_received = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &addr_size);
+        bytes_received = rudp_recv(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &addr_size);
 
         //Start to count for start
         if(total_received == 0 && bytes_received > 0){
@@ -99,7 +107,6 @@ int main(int argc, char *argv[]) {
             gettimeofday(&end, NULL);
             time = time_diff(start, end);
             total_time += time;
-
 
             printf("- Run #%d Data: Time: %.2f ms; Speed: %.2f MB/s\n", run_number, time, (double)total_received/(time*1000));
 
@@ -131,7 +138,7 @@ int main(int argc, char *argv[]) {
 
 
     //Close socket
-    close(sockfd);
+    rudp_close(sockfd);
 
     return 0;
 }

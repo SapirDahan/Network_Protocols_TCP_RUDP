@@ -7,9 +7,16 @@
 #include <unistd.h>
 #include <time.h>
 
+int rudp_socket(int domain, int type, int protocol);
+ssize_t rudp_send(int sockfd, char* buffer, ssize_t bytes_read, int flag, const struct sockaddr *addr, socklen_t addr_len);
+int rudp_recv(int sockfd, void *buf, size_t len, int flags,
+              struct sockaddr *src_addr, socklen_t *addrlen);
+int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_addr, int BUFFER_SIZE);
+void rudp_close(int sockfd);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
 #define SIZE_OF_FILE 2097153 // Size of the file (2MB)
+
 #define EXIT_MESSAGE "<exit>" // Exit massage
 
 // Function to generate a random alphanumeric character only with letters and numbers
@@ -61,7 +68,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create socket
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int sockfd = rudp_socket(AF_INET, SOCK_DGRAM, 0);
 
     if (sockfd < 0) {
         perror("Error creating socket\n");
@@ -93,6 +100,8 @@ int main(int argc, char *argv[]) {
     char buffer[BUFFER_SIZE];
     memset(buffer, 'A', BUFFER_SIZE);
 
+    while(hand_shake_send(buffer, sockfd, dest_addr, BUFFER_SIZE) == 0){}
+
     // Open file for reading
     FILE *file_to_read = fopen("random_generated_file.txt", "rb");
     if (file_to_read == NULL) {
@@ -115,7 +124,7 @@ int main(int argc, char *argv[]) {
         while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file_to_read)) > 0) {
 
             //Send the data
-            bytes_sent = sendto(sockfd, buffer, bytes_read, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+            bytes_sent = rudp_send(sockfd, buffer, bytes_read, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             total_sent += bytes_sent;
             if (bytes_sent < 0) {
                 perror("Error sending data\n");
@@ -146,7 +155,7 @@ int main(int argc, char *argv[]) {
     }
 
     //Close the socket
-    close(sockfd);
+    rudp_close(sockfd);
 
     printf("Sender end\n");
 
