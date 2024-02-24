@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
             total_time += time;
 
 
-            printf("- Run #%d Data: Time: %.2f ms; Speed: %.2f MB/s\n", run_number, time, (double)total_received/(time*1000));
+            printf("- Run #%d Data: Bytes Received: %d Bytes; Time: %.2f ms; Speed: %.2f MB/s\n", run_number, (int)total_received, time, (double)total_received/(time*1000));
 
             run_number += 1;
 

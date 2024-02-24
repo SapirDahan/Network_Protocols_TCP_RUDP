@@ -15,7 +15,7 @@ void rudp_close(int sockfd);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
 // #define SIZE_OF_FILE 2097153 // Size of the file (2MB)
-#define SIZE_OF_FILE 4096 // experimental size
+#define SIZE_OF_FILE 10000 // experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 
 // Function to generate a random alphanumeric character only with letters and numbers
