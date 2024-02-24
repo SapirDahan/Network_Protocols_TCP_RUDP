@@ -9,8 +9,7 @@
 
 int rudp_socket(int domain, int type, int protocol);
 ssize_t rudp_send(int sockfd, char* buffer, ssize_t bytes_read, int flag, const struct sockaddr *addr, socklen_t addr_len);
-int rudp_recv(int sockfd, void *buf, size_t len, int flags,
-              struct sockaddr *src_addr, socklen_t *addrlen);
+int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_addr, int BUFFER_SIZE);
 void rudp_close(int sockfd);
 

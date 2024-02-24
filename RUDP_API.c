@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <stdint.h>
+#include <string.h>
 
 
 int rudp_socket(int domain, int type, int protocol){
@@ -15,9 +17,51 @@ int rudp_socket(int domain, int type, int protocol){
     return sockfd;
 }
 
+char* int_to_2_chars(int the_int){
+    char binaryString[17];
+    int i;
+    for (i = 15; i >= 0; --i) {
+        binaryString[15 - i] = ((the_int & (1 << i)) ? '1' : '0');
+    }
+    binaryString[16] = '\0';
 
-int rudp_send(int sockfd, const void *buf, size_t len, int flags,
-             const struct sockaddr *dest_addr, socklen_t addrlen) {
+    char byte0[9];
+    char byte1[9];
+
+    strncpy(byte0, binaryString, 8);
+    byte0[8] = '\0';
+    strncpy(byte1, binaryString + 8, 9);
+
+    static char chars[2];
+
+    chars[0] = (char)strtol(byte0, NULL, 2);
+    chars[1] = (char)strtol(byte1, NULL, 2);
+
+    return chars;
+}
+
+unsigned short int calculate_checksum(void *data, unsigned int bytes) {
+    unsigned short int *data_pointer = (unsigned short int *)data;
+    unsigned int total_sum = 0;
+    // Main summing loop
+    while (bytes > 1) {
+        total_sum += *data_pointer++;
+        bytes -= 2;
+    }
+    // Add left-over byte, if any
+    if (bytes > 0)
+        total_sum += *((unsigned char *)data_pointer);
+    // Fold 32-bit sum to 16 bits
+    while (total_sum >> 16)
+        total_sum = (total_sum & 0xFFFF) + (total_sum >> 16);
+    return (~((unsigned short int)total_sum));
+}
+
+int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
+
+    char* bytes01 = int_to_2_chars((int)len);
+    char* bytes23 = int_to_2_chars((int) calculate_checksum((void*)buf, len));
+
     int bytes_sent = sendto(sockfd, buf, len, flags, dest_addr, addrlen);
     if (bytes_sent == -1) {
         perror("rudp_send");
