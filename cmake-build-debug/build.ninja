@@ -79,6 +79,12 @@ build CMakeFiles/Networks_Project3.dir/RUDP_Receiver.c.o: C_COMPILER__Networks_P
   OBJECT_DIR = CMakeFiles/Networks_Project3.dir
   OBJECT_FILE_DIR = CMakeFiles/Networks_Project3.dir
 
+build CMakeFiles/Networks_Project3.dir/RUDP_API.c.o: C_COMPILER__Networks_Project3_unscanned_Debug /home/parallels/CLionProjects/Networks_Project3/RUDP_API.c || cmake_object_order_depends_target_Networks_Project3
+  DEP_FILE = CMakeFiles/Networks_Project3.dir/RUDP_API.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/Networks_Project3.dir
+  OBJECT_FILE_DIR = CMakeFiles/Networks_Project3.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Networks_Project3
@@ -87,7 +93,7 @@ build CMakeFiles/Networks_Project3.dir/RUDP_Receiver.c.o: C_COMPILER__Networks_P
 #############################################
 # Link the executable Networks_Project3
 
-build Networks_Project3: C_EXECUTABLE_LINKER__Networks_Project3_Debug CMakeFiles/Networks_Project3.dir/main.c.o CMakeFiles/Networks_Project3.dir/TCP_Receiver.c.o CMakeFiles/Networks_Project3.dir/TCP_Sender.c.o CMakeFiles/Networks_Project3.dir/RUDP_Sender.c.o CMakeFiles/Networks_Project3.dir/RUDP_Receiver.c.o
+build Networks_Project3: C_EXECUTABLE_LINKER__Networks_Project3_Debug CMakeFiles/Networks_Project3.dir/main.c.o CMakeFiles/Networks_Project3.dir/TCP_Receiver.c.o CMakeFiles/Networks_Project3.dir/TCP_Sender.c.o CMakeFiles/Networks_Project3.dir/RUDP_Sender.c.o CMakeFiles/Networks_Project3.dir/RUDP_Receiver.c.o CMakeFiles/Networks_Project3.dir/RUDP_API.c.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/Networks_Project3.dir
   POST_BUILD = :
