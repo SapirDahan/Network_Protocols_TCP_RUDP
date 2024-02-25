@@ -10,8 +10,8 @@
 
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-// #define SIZE_OF_FILE 2097152 // Size of the file (2MB)
-#define SIZE_OF_FILE 10000 // Experimental size
+#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+//#define SIZE_OF_FILE 10000 // Experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 
 // Function to generate a random alphanumeric character only with letters and numbers

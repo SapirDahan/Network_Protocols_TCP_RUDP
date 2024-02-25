@@ -14,8 +14,8 @@ int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_add
 void rudp_close(int sockfd);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-// #define SIZE_OF_FILE 2097153 // Size of the file (2MB)
-#define SIZE_OF_FILE 10000 // experimental size
+//#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+#define SIZE_OF_FILE 8192 // experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 
 // Function to generate a random alphanumeric character only with letters and numbers
@@ -95,10 +95,10 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Set a large buffer or a file
     char buffer[BUFFER_SIZE];
     memset(buffer, 'A', BUFFER_SIZE);
 
+    // Three-Way-Handshake
     while(hand_shake_send(buffer, sockfd, dest_addr, BUFFER_SIZE) == 0){}
 
     // Open file for reading
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     } while(send_again == 'y' || send_again == 'Y');
 
     // Send the exit message to the server
-    if (sendto(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
+    if (rudp_send(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
         perror("Could not send a exit message\n");
         return EXIT_FAILURE;
     }

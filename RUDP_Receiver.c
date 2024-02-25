@@ -8,8 +8,7 @@
 
 int rudp_socket(int domain, int type, int protocol);
 ssize_t rudp_send(int sockfd, char* buffer, ssize_t bytes_read, int flag, const struct sockaddr *addr, socklen_t addr_len);
-int rudp_recv(int sockfd, void *buf, size_t len, int flags,
-              struct sockaddr *src_addr, socklen_t *addrlen);
+int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 int hand_shake_recv(char * buffer, int sockfd, const struct sockaddr_in sender_addr, int BUFFER_SIZE);
 void rudp_close(int sockfd);
 
@@ -63,9 +62,9 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-
     char buffer[BUFFER_SIZE]; // An array with the buffer size
 
+    // Three-Way-Handshake
     while(hand_shake_recv(buffer, sockfd, client_addr, BUFFER_SIZE) == 0){}
 
     ssize_t bytes_received;
@@ -78,6 +77,7 @@ int main(int argc, char *argv[]) {
     struct timeval start, end;
     double time;
     double total_time = 0;
+
 
     socklen_t addr_size = sizeof(client_addr);
 

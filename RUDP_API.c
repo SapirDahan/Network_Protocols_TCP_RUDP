@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <time.h>
-#include <stdint.h>
-#include <string.h>
+
+#define BUFFER_SIZE1 2048
 
 
 int rudp_socket(int domain, int type, int protocol){
@@ -59,29 +59,40 @@ unsigned short int calculate_checksum(void *data, unsigned int bytes) {
 
 int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
 
-//    char* bytes01 = int_to_2_chars((int)len);
-//    char* bytes23 = int_to_2_chars((int) calculate_checksum((void*)buf, len));
-//
-//    char new_buffer[2052];
 
-//    strcpy(new_buffer, bytes01);
-//    strcat(new_buffer, bytes23);
-//    strcat(new_buffer, buf);
+    // Creating the header
+    char new_buffer[BUFFER_SIZE1+4];
+    char* bytes01 = int_to_2_chars((int)len);
+    char* bytes23 = int_to_2_chars((int) calculate_checksum((void*)buf, len));
+    strcpy(new_buffer, bytes01);
+    strcat(new_buffer, bytes23);
+    strcat(new_buffer, buf);
 
-    int bytes_sent = sendto(sockfd, buf, len, flags, dest_addr, addrlen);
+    // Sending the data and the header
+    int bytes_sent = sendto(sockfd, new_buffer, len+4, flags, dest_addr, addrlen);
     if (bytes_sent == -1) {
         perror("rudp_send");
     }
-    return bytes_sent;
+
+    return bytes_sent-4;
 }
 
-int rudp_recv(int sockfd, void *buf, size_t len, int flags,
-             struct sockaddr *src_addr, socklen_t *addrlen) {
-    int bytes_received = recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
+int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) {
+    char buf1[BUFFER_SIZE1+4]={0};
+    int bytes_received = recvfrom(sockfd, buf1, len+4, flags, src_addr, addrlen);
     if (bytes_received == -1) {
         perror("rudp_recv");
     }
-    return bytes_received;
+
+    char header_length[2+1];
+    char header_checksum[2+1];
+    strncpy(header_length, buf1, 2);
+    header_length[2] = '\0';
+    strncpy(header_checksum, buf1 + 2, 2);
+    header_checksum[2] = '\0';
+    strncpy(buf, buf1 + 4, BUFFER_SIZE1);
+
+    return bytes_received - 4;
 }
 
 int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_addr, int BUFFER_SIZE){
