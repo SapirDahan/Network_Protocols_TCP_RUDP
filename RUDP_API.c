@@ -64,7 +64,7 @@ int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct s
     char new_buffer[BUFFER_SIZE1+4];
     char* bytes01 = int_to_2_chars((int)len);
     char* bytes23 = int_to_2_chars((int) calculate_checksum((void*)buf, len));
-    strcpy(new_buffer, bytes01);
+    strcpy(new_buffer, bytes01); // problem here?
     strcat(new_buffer, bytes23);
     strcat(new_buffer, buf);
 
@@ -84,13 +84,37 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src
         perror("rudp_recv");
     }
 
+    printf("%s\n",buf1);
+    // Parse Length and Checksum from the header
     char header_length[2+1];
     char header_checksum[2+1];
     strncpy(header_length, buf1, 2);
     header_length[2] = '\0';
-    strncpy(header_checksum, buf1 + 2, 2);
+    printf("the parsed length is %d %d\n", header_length[0], header_length[1]); //wrong!!
+
+    strncpy(header_checksum, buf1 + 2, 2); //correct!!
     header_checksum[2] = '\0';
     strncpy(buf, buf1 + 4, BUFFER_SIZE1);
+
+    // Check packet integrity
+    char a[3];
+    char b[3];
+    strncpy(a, int_to_2_chars((int)len), 2);
+    a[2] = '\0';
+    strncpy(b, header_length, 2);
+    b[2] = '\0';
+    int length_ok = ((a[0] == b[0]) && (a[1] == b[1])) ? 1 : 0;
+    //int length_ok = (strcmp(a, b)) ? 1 : 0;
+    printf("length OK = %d\n",length_ok);
+    printf("%d %d %d %d\n", a[0], a[1], b[0], b[1]);
+
+    strncpy(a, int_to_2_chars((int)calculate_checksum((void*)buf, len)), 2);
+    a[2] = '\0';
+    strncpy(b, header_checksum, 2);
+    b[2] = '\0';
+    int checksum_ok = ((a[0] == b[0]) && (a[1] == b[1])) ? 1 : 0;
+    printf("checksum OK = %d\n",checksum_ok);
+    printf("%d %d %d %d\n", a[0], a[1], b[0], b[1]);
 
     return bytes_received - 4;
 }
