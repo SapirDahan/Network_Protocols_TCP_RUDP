@@ -7,6 +7,7 @@
 #include <time.h>
 
 #define BUFFER_SIZE1 2048
+#define PACKET_RECEIVED "<PACKET RECEIVED>"
 
 
 int rudp_socket(int domain, int type, int protocol){
@@ -17,27 +18,27 @@ int rudp_socket(int domain, int type, int protocol){
     return sockfd;
 }
 
-char* int_to_2_chars(int the_int){
-    char binaryString[17];
-    int i;
-    for (i = 15; i >= 0; --i) {
-        binaryString[15 - i] = ((the_int & (1 << i)) ? '1' : '0');
+
+// Function to convert an integer to a 16-bit binary represented by a string of size 2
+char* int_to_2_char_string(unsigned int value) {
+    if (value > 65535) {
+        fprintf(stderr, "Value out of range for 16-bit representation\n");
+        return NULL;
     }
-    binaryString[16] = '\0';
 
-    char byte0[9];
-    char byte1[9];
+    // Allocate memory for the result
+    char* result = malloc(3); // 2 characters + null terminator
+    if (!result) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return NULL;
+    }
 
-    strncpy(byte0, binaryString, 8);
-    byte0[8] = '\0';
-    strncpy(byte1, binaryString + 8, 9);
+    // Store the higher and lower 8 bits in two separate chars
+    result[0] = (char)((value >> 8) & 0xFF); // Higher 8 bits
+    result[1] = (char)(value & 0xFF);        // Lower 8 bits
+    result[2] = '\0';                        // Null-terminate the string
 
-    static char chars[2];
-
-    chars[0] = (char)strtol(byte0, NULL, 2);
-    chars[1] = (char)strtol(byte1, NULL, 2);
-
-    return chars;
+    return result;
 }
 
 unsigned short int calculate_checksum(void *data, unsigned int bytes) {
@@ -57,16 +58,22 @@ unsigned short int calculate_checksum(void *data, unsigned int bytes) {
     return (~((unsigned short int)total_sum));
 }
 
-int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
 
+int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
 
     // Creating the header
     char new_buffer[BUFFER_SIZE1+4];
-    char* bytes01 = int_to_2_chars((int)len);
-    char* bytes23 = int_to_2_chars((int) calculate_checksum((void*)buf, len));
-    strcpy(new_buffer, bytes01); // problem here?
-    strcat(new_buffer, bytes23);
+    char* bytes01 = int_to_2_char_string((int)len);
+    char* bytes23 = int_to_2_char_string((int) calculate_checksum((void*)buf, (int)len));
+    char header[5] = "0123"; // Placeholder
+    strcpy(new_buffer, header);
     strcat(new_buffer, buf);
+    new_buffer[0] = bytes01[0];
+    new_buffer[1] = bytes01[1];
+    new_buffer[2] = bytes23[0];
+    new_buffer[3] = bytes23[1];
+    free(bytes01);
+    free(bytes23);
 
     // Sending the data and the header
     int bytes_sent = sendto(sockfd, new_buffer, len+4, flags, dest_addr, addrlen);
@@ -84,37 +91,42 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src
         perror("rudp_recv");
     }
 
-    printf("%s\n",buf1);
     // Parse Length and Checksum from the header
     char header_length[2+1];
     char header_checksum[2+1];
-    strncpy(header_length, buf1, 2);
+    header_length[0] = buf1[0];
+    header_length[1] = buf1[1];
     header_length[2] = '\0';
-    printf("the parsed length is %d %d\n", header_length[0], header_length[1]); //wrong!!
-
-    strncpy(header_checksum, buf1 + 2, 2); //correct!!
+    header_checksum[0] = buf1[2];
+    header_checksum[1] = buf1[3];
     header_checksum[2] = '\0';
-    strncpy(buf, buf1 + 4, BUFFER_SIZE1);
+    strncpy(buf, buf1 + 4, BUFFER_SIZE1); // Remove header from packet
+
+    // @@@@@@@@@@@@@@@@@@@@ Workaround @@@@@@@@@@@@@@@@@@@@@@@@
+    char first_char_in_packet = (char)buf1[4];
+    int command = 0;
+    if (first_char_in_packet == '<') {
+        command = 1;
+    }
+
 
     // Check packet integrity
-    char a[3];
-    char b[3];
-    strncpy(a, int_to_2_chars((int)len), 2);
-    a[2] = '\0';
-    strncpy(b, header_length, 2);
-    b[2] = '\0';
-    int length_ok = ((a[0] == b[0]) && (a[1] == b[1])) ? 1 : 0;
-    //int length_ok = (strcmp(a, b)) ? 1 : 0;
+    char* a = int_to_2_char_string((int)len);
+    char* b = header_length;
+    int length_ok = (((a[0] == b[0]) && (a[1] == b[1])) || (command == 1)) ? 1 : 0;
+    //printf("\n*****\nexpected: %02X%02X\nreceived %02X%02X\n", a[0], a[1], b[0], b[1]);
     printf("length OK = %d\n",length_ok);
-    printf("%d %d %d %d\n", a[0], a[1], b[0], b[1]);
 
-    strncpy(a, int_to_2_chars((int)calculate_checksum((void*)buf, len)), 2);
-    a[2] = '\0';
-    strncpy(b, header_checksum, 2);
-    b[2] = '\0';
-    int checksum_ok = ((a[0] == b[0]) && (a[1] == b[1])) ? 1 : 0;
-    printf("checksum OK = %d\n",checksum_ok);
-    printf("%d %d %d %d\n", a[0], a[1], b[0], b[1]);
+    char* c = int_to_2_char_string((int)calculate_checksum((void*)buf, len));
+    char* d = header_checksum;
+    int checksum_ok = ((c[0] == d[0]) && (c[1] == d[1])) ? 1 : 0;
+    //printf("expected: %02X%02X\nreceived %02X%02X\n", c[0], c[1], d[0], d[1]);
+    printf("checksum OK = %d\n*****\n\n",checksum_ok);
+
+    //checking the packet is ok
+    if(length_ok && checksum_ok){
+        rudp_send(sockfd, PACKET_RECEIVED, len, flags, (struct sockaddr *)&src_addr, sizeof(src_addr) );
+    }
 
     return bytes_received - 4;
 }
