@@ -129,7 +129,6 @@ int main(int argc, char *argv[]) {
             ack_recv(sockfd, ack_buf, 36, 0, (struct sockaddr*)&dest_addr,(socklen_t *)sizeof(dest_addr));
             //fclose(stderr);
 
-
             printf("ACK packet = %s \n\n****************\n\n", ack_buf);
 
          }

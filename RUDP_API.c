@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <errno.h>
 
 #define BUFFER_SIZE1 2048
 #define TIMEOUT_SEC 2
@@ -146,7 +147,8 @@ int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_
     int bytes_received = recvfrom(sockfd, buf1, len+4, flags, src_addr, addrlen);
     printf("ACK bytes received: %d\n", bytes_received);
     if (bytes_received == -1) {
-        perror("Error from ack_recv");
+        //perror("Error from ack_recv");
+        printf("Catching the error: Error %d %s\n", errno, strerror(errno));
     }
     strncpy(buf, buf1 + 4, 32); // Remove header from packet
     return bytes_received - 4;
