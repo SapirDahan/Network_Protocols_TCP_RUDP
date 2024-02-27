@@ -7,7 +7,7 @@
 #include <time.h>
 
 #define BUFFER_SIZE1 2048
-#define PACKET_RECEIVED "<PACKET RECEIVED>"
+#define TIMEOUT_SEC 2
 
 
 int rudp_socket(int domain, int type, int protocol){
@@ -102,7 +102,6 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src
     header_checksum[2] = '\0';
     strncpy(buf, buf1 + 4, BUFFER_SIZE1); // Remove header from packet
 
-    // @@@@@@@@@@@@@@@@@@@@ Workaround @@@@@@@@@@@@@@@@@@@@@@@@
     char first_char_in_packet = (char)buf1[4];
     int command = 0;
     if (first_char_in_packet == '<') {
@@ -121,15 +120,38 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src
     char* d = header_checksum;
     int checksum_ok = ((c[0] == d[0]) && (c[1] == d[1])) ? 1 : 0;
     //printf("expected: %02X%02X\nreceived %02X%02X\n", c[0], c[1], d[0], d[1]);
-    printf("checksum OK = %d\n*****\n\n",checksum_ok);
+    printf("checksum OK = %d\n",checksum_ok);
 
-    //checking the packet is ok
-    if(length_ok && checksum_ok){
-        rudp_send(sockfd, PACKET_RECEIVED, len, flags, (struct sockaddr *)&src_addr, sizeof(src_addr) );
+    if(length_ok*checksum_ok == 1 || bytes_received == 4){
+        return bytes_received - 4;
     }
 
+    else{
+        return -1;
+    }
+}
+
+int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) {
+    char buf1[36]={0};
+
+    // Set timeout for the socket
+    struct timeval timeout;
+    timeout.tv_sec = TIMEOUT_SEC;
+    timeout.tv_usec = 0;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+        perror("Error setting socket timeout");
+        exit(EXIT_FAILURE);
+    }
+
+    int bytes_received = recvfrom(sockfd, buf1, len+4, flags, src_addr, addrlen);
+    printf("ACK bytes received: %d\n", bytes_received);
+    if (bytes_received == -1) {
+        perror("Error from ack_recv");
+    }
+    strncpy(buf, buf1 + 4, 32); // Remove header from packet
     return bytes_received - 4;
 }
+
 
 int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_addr, int BUFFER_SIZE){
     int client_seq = 0;

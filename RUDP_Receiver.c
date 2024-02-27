@@ -14,6 +14,7 @@ void rudp_close(int sockfd);
 
 #define BUFFER_SIZE 2048 // The size of the buffer
 #define EXIT_MESSAGE "<exit>" // The exit massage
+#define PACKET_RECEIVED "<PACKET RECEIVED>"
 
 // Function to calculate the difference in time between start and end time
 double time_diff(struct timeval start, struct timeval end) {
@@ -87,6 +88,13 @@ int main(int argc, char *argv[]) {
     while (1) {
         // Receive from the sender
         bytes_received = rudp_recv(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &addr_size);
+
+        // Send packet received ack
+        sleep(10); // test feature: delay for triggering a timeout
+        if(bytes_received > 0){
+            rudp_send(sockfd, PACKET_RECEIVED, strlen(PACKET_RECEIVED), 0, (struct sockaddr *)&client_addr, addr_size);
+            printf("\"Packet Received\" massage has been sent\n\n******\n\n");
+        }
 
         //Start to count for start
         if(total_received == 0 && bytes_received > 0){

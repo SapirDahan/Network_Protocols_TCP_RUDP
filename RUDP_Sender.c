@@ -12,6 +12,7 @@ ssize_t rudp_send(int sockfd, char* buffer, ssize_t bytes_read, int flag, const 
 int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 int hand_shake_send(char * buffer, int sockfd, const struct sockaddr_in recv_addr, int BUFFER_SIZE);
 void rudp_close(int sockfd);
+int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
 //#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
@@ -74,20 +75,10 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-//    // Set congestion control algorithm
-//    if (setsockopt(sockfd, IPPROTO_TCP, TCP_CONGESTION, algo, strlen(algo)) < 0) {
-//        perror("Error setting congestion control algorithm\n");
-//        close(sockfd);
-//        exit(EXIT_FAILURE);
-//    }
-
     struct sockaddr_in dest_addr; // The address of the receiver
-//    dest_addr.sin_family = AF_INET;
-//    dest_addr.sin_port = htons(port);
     memset(&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_family = AF_INET;// Using IPv4
     dest_addr.sin_port = htons(port);
-    //inet_pton(AF_INET, ip, &dest_addr.sin_addr);
 
     if (inet_pton(AF_INET, ip, &dest_addr.sin_addr) <= 0) {
         fprintf(stderr, "Invalid address/ Address not supported \n");
@@ -97,6 +88,9 @@ int main(int argc, char *argv[]) {
 
     char buffer[BUFFER_SIZE];
     memset(buffer, 'A', BUFFER_SIZE);
+    char ack_buf[36];
+    memset(ack_buf, 'B', 36);
+
 
     // Three-Way-Handshake
     while(hand_shake_send(buffer, sockfd, dest_addr, BUFFER_SIZE) == 0){}
@@ -126,13 +120,21 @@ int main(int argc, char *argv[]) {
             bytes_sent = rudp_send(sockfd, buffer, bytes_read, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             total_sent += bytes_sent;
             if (bytes_sent < 0) {
-                perror("Error sending data\n");
+                perror("Error sending data\n"); //how to pass to a variable?
                 break;
             }
-        }
+
+            //Receive acK from receiver
+            //freopen("/dev/null", "w", stderr);
+            ack_recv(sockfd, ack_buf, 36, 0, (struct sockaddr*)&dest_addr,(socklen_t *)sizeof(dest_addr));
+            //fclose(stderr);
 
 
-        fseek(file_to_read, 0, SEEK_SET);
+            printf("ACK packet = %s \n\n****************\n\n", ack_buf);
+
+         }
+
+        fseek(file_to_read, 0, SEEK_SET); //Reset pointer
 
         //The byte sent
         printf("Total bytes sent: %zd\n", total_sent);
