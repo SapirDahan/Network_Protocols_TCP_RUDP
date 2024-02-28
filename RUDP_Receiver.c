@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
         bytes_received = rudp_recv(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &addr_size);
 
         // Send packet received ack
-        sleep(3); // test feature: delay for triggering a timeout
+        //sleep(0); // test feature: delay for triggering a timeout
         if(bytes_received > 0){
             rudp_send(sockfd, PACKET_RECEIVED, strlen(PACKET_RECEIVED), 0, (struct sockaddr *)&client_addr, addr_size);
         }
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
         }
 
         //Count only if not exit massage
-        if (strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) != 0) {
+        if (strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) != 0 && bytes_received > 0) {
             total_received += bytes_received;
             all_run_receive += bytes_received;
         }

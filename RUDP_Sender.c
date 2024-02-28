@@ -15,8 +15,8 @@ void rudp_close(int sockfd);
 int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-//#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
-#define SIZE_OF_FILE 8192 // experimental size
+#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+//#define SIZE_OF_FILE 8192 // experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 #define PACKET_RECEIVED "<PACKET RECEIVED>"
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Seed the random number generator
-    srand((unsigned int)time(NULL));
+    srand((unsigned int) time(NULL));
 
     // Generate random characters and write them to the file
     for (int i = 0; i < SIZE_OF_FILE - 1; i++) {
@@ -61,9 +61,7 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-ip") == 0) {
             ip = argv[i + 1];
-        }
-
-        else if (strcmp(argv[i], "-p") == 0) {
+        } else if (strcmp(argv[i], "-p") == 0) {
             port = atoi(argv[i + 1]);
         }
     }
@@ -94,7 +92,7 @@ int main(int argc, char *argv[]) {
 
 
     // Three-Way-Handshake
-    while(hand_shake_send(buffer, sockfd, dest_addr, BUFFER_SIZE) == 0){}
+    while (hand_shake_send(buffer, sockfd, dest_addr, BUFFER_SIZE) == 0) {}
 
     // Open file for reading
     FILE *file_to_read = fopen("random_generated_file.txt", "rb");
@@ -107,7 +105,8 @@ int main(int argc, char *argv[]) {
     ssize_t total_sent;
     ssize_t bytes_sent;
     ssize_t bytes_read;
-    char send_again;
+    char send_again; // Send the file again
+    int resend_packet = 1;
 
     // Send the file until the user ask to stop
     do {
@@ -117,23 +116,27 @@ int main(int argc, char *argv[]) {
         //Read the file
         while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file_to_read)) > 0) {
 
-            //Send the data
-            bytes_sent = rudp_send(sockfd, buffer, bytes_read, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-            total_sent += bytes_sent;
-            if (bytes_sent < 0) {
-                perror("Error sending data\n"); //how to pass to a variable?
-                break;
-            }
+            do {
+                //Send the data
+                bytes_sent = rudp_send(sockfd, buffer, bytes_read, 0, (struct sockaddr *) &dest_addr,
+                                       sizeof(dest_addr));
+                if (bytes_sent < 0) {
+                    perror("Error sending data\n");
+                    break;
+                }
 
-            //Receive acK from receiver
-            int error_number = ack_recv(sockfd, ack_buf, 36, 0, (struct sockaddr*)&dest_addr,(socklen_t *)sizeof(dest_addr));
+                //Receive ack from receiver
+                int error_number = ack_recv(sockfd, ack_buf, 36, 0, (struct sockaddr *) &dest_addr,
+                                            (socklen_t *) sizeof(dest_addr));
 
-            if(!(error_number != 11 && strcmp(ack_buf, PACKET_RECEIVED) == 0)){
-
-            }
-
-         }
-
+                if (!(error_number != 11 && strcmp(ack_buf, PACKET_RECEIVED) == 0)) {
+                    resend_packet = 1;
+                } else {
+                    resend_packet = 0;
+                    total_sent += bytes_sent;
+                }
+            } while (resend_packet == 1);
+        }
         fseek(file_to_read, 0, SEEK_SET); //Reset pointer
 
         //The byte sent
@@ -143,15 +146,15 @@ int main(int argc, char *argv[]) {
         printf("Send again? (y/n): ");
         scanf("%s", &send_again);
 
-    } while(send_again == 'y' || send_again == 'Y');
+    }while (send_again == 'y' || send_again == 'Y');
+
 
     // Send the exit message to the server
-    if (rudp_send(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
+    if (rudp_send(sockfd, EXIT_MESSAGE, strlen(EXIT_MESSAGE), 0, (struct sockaddr *) &dest_addr,
+                  sizeof(dest_addr)) < 0) {
         perror("Could not send a exit message\n");
         return EXIT_FAILURE;
-    }
-
-    else{
+    } else {
         printf("Sent exit massage\n");
     }
 
