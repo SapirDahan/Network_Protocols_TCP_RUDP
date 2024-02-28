@@ -9,6 +9,7 @@
 
 #define BUFFER_SIZE 2048 // The size of the buffer
 #define EXIT_MESSAGE "<exit>" // The exit massage
+#define PROBABILITY_LOSS 0.5
 
 // Function to calculate the difference in time between start and end time
 double time_diff(struct timeval start, struct timeval end) {
@@ -103,8 +104,12 @@ int main(int argc, char *argv[]) {
     printf("-         * Statistics *         -\n");
     // Receive data until the sender closes the connection
     while (1) {
-        // Receive from the sender
-        bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
+
+        // Receive the data with the probability
+        if ((double)rand() / RAND_MAX > PROBABILITY_LOSS) {
+            bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
+
+        }
 
         //Start to count for start
         if(total_received == 0 && bytes_received > 0){
@@ -140,6 +145,8 @@ int main(int argc, char *argv[]) {
             printf("\nExit message received. Closing connection.\n\n");
             break; // Exit the loop to close the connection
         }
+
+        bytes_received = 0;
     }
 
 

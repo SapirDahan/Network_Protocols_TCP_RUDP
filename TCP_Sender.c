@@ -82,6 +82,15 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    struct timeval timeout;
+
+    // Set timeout for receiving
+    timeout.tv_sec = 1;  // 1 seconds
+    timeout.tv_usec = 0; // 0 microseconds
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+        perror("setsockopt failed");
+    }
+
     struct sockaddr_in dest_addr; // The address of the receiver
     dest_addr.sin_family = AF_INET; // Using IPV4
     dest_addr.sin_port = htons(port);
@@ -131,6 +140,7 @@ int main(int argc, char *argv[]) {
 
             //Send the data
             bytes_sent = send(sockfd, buffer, bytes_read, 0);
+
             total_sent += bytes_sent;
             if (bytes_sent < 0) {
                 perror("Error sending data\n");

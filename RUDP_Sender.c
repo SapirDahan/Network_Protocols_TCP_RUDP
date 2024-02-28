@@ -15,8 +15,8 @@ void rudp_close(int sockfd);
 int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
-//#define SIZE_OF_FILE 8192 // experimental size
+//#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+#define SIZE_OF_FILE 8192 // experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 #define PACKET_RECEIVED "<PACKET RECEIVED>"
 
@@ -131,6 +131,7 @@ int main(int argc, char *argv[]) {
 
                 if (!(error_number != 11 && strcmp(ack_buf, PACKET_RECEIVED) == 0)) {
                     resend_packet = 1;
+                    //printf("timeout expired\n");
                 } else {
                     resend_packet = 0;
                     total_sent += bytes_sent;

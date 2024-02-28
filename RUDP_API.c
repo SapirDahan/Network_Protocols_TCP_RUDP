@@ -8,7 +8,7 @@
 #include <errno.h>
 
 #define BUFFER_SIZE1 2048
-#define TIMEOUT_SEC 2
+#define TIMEOUT_SEC 1
 
 
 int rudp_socket(int domain, int type, int protocol){
