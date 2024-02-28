@@ -9,6 +9,7 @@
 
 #define BUFFER_SIZE 2048 // The size of the buffer
 #define EXIT_MESSAGE "<exit>" // The exit massage
+#define PACKET_RECEIVED "<PACKET RECEIVED>"
 #define PROBABILITY_LOSS 0.5
 
 // Function to calculate the difference in time between start and end time
@@ -100,15 +101,27 @@ int main(int argc, char *argv[]) {
     double time;
     double total_time = 0;
 
+    char *isEOF = NULL;
+
     printf("----------------------------------\n");
     printf("-         * Statistics *         -\n");
     // Receive data until the sender closes the connection
     while (1) {
 
+        bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
+
         // Receive the data with the probability
         if ((double)rand() / RAND_MAX > PROBABILITY_LOSS) {
-            bytes_received = recv(new_sockfd, buffer, BUFFER_SIZE, 0);
+            send(new_sockfd, PACKET_RECEIVED, strlen(PACKET_RECEIVED),0);
+            //printf("%s\n\n", buffer);
 
+            //Symbol end of file
+            isEOF = strchr(buffer, '!');
+
+        }
+        else{
+            bytes_received = 0;
+            isEOF = NULL;
         }
 
         //Start to count for start
@@ -122,8 +135,8 @@ int main(int argc, char *argv[]) {
             all_run_receive += bytes_received;
         }
 
-        //Symbol end of file
-        char *isEOF = strchr(buffer, '!');
+
+
 
         //If we did not finish yet
         if ((isEOF != NULL && total_received > 0) && strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) != 0) {

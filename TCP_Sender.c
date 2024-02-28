@@ -10,9 +10,10 @@
 
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
-//#define SIZE_OF_FILE 10000 // Experimental size
+//#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+#define SIZE_OF_FILE 8192 // Experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
+#define PACKET_RECEIVED "<PACKET RECEIVED>"
 
 // Function to generate a random alphanumeric character only with letters and numbers
 char random_alphanumeric() {
@@ -113,9 +114,12 @@ int main(int argc, char *argv[]) {
         printf("Receiver connected, beginning to sending file...\n");
     }
 
-    // Set a large buffer or a file
+    // Set buffers
     char buffer[BUFFER_SIZE];
     memset(buffer, 'A', BUFFER_SIZE);
+    char ack_buf[32];
+    memset(ack_buf,'B',32);
+
 
     // Open file for reading
     FILE *file_to_read = fopen("random_generated_file.txt", "rb");
@@ -129,6 +133,7 @@ int main(int argc, char *argv[]) {
     ssize_t bytes_sent;
     ssize_t bytes_read;
     char send_again;
+    int bytes_recv = 0;
 
     // Send the file until the user ask to stop
     do {
@@ -137,15 +142,20 @@ int main(int argc, char *argv[]) {
 
         //Read the file
         while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file_to_read)) > 0) {
+            do{
+                //Send the data
+                bytes_sent = send(sockfd, buffer, bytes_read, 0);
 
-            //Send the data
-            bytes_sent = send(sockfd, buffer, bytes_read, 0);
+                if (bytes_sent < 0) {
+                    perror("Error sending data\n");
+                    break;
+                }
+
+                bytes_recv = recv(sockfd, ack_buf, 32,0); // Wait for PACKET RECEIVED acknowledgment
+
+            } while(bytes_recv <= 0);
 
             total_sent += bytes_sent;
-            if (bytes_sent < 0) {
-                perror("Error sending data\n");
-                break;
-            }
         }
 
 
