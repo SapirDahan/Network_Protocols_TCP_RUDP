@@ -90,10 +90,9 @@ int main(int argc, char *argv[]) {
         bytes_received = rudp_recv(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &addr_size);
 
         // Send packet received ack
-        sleep(7); // test feature: delay for triggering a timeout
+        sleep(3); // test feature: delay for triggering a timeout
         if(bytes_received > 0){
             rudp_send(sockfd, PACKET_RECEIVED, strlen(PACKET_RECEIVED), 0, (struct sockaddr *)&client_addr, addr_size);
-            printf("\"Packet Received\" massage has been sent\n\n******\n\n");
         }
 
         //Start to count for start

@@ -115,13 +115,13 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src
     char* b = header_length;
     int length_ok = (((a[0] == b[0]) && (a[1] == b[1])) || (command == 1)) ? 1 : 0;
     //printf("\n*****\nexpected: %02X%02X\nreceived %02X%02X\n", a[0], a[1], b[0], b[1]);
-    printf("length OK = %d\n",length_ok);
+    //printf("length OK = %d\n",length_ok);
 
     char* c = int_to_2_char_string((int)calculate_checksum((void*)buf, len));
     char* d = header_checksum;
     int checksum_ok = ((c[0] == d[0]) && (c[1] == d[1])) ? 1 : 0;
     //printf("expected: %02X%02X\nreceived %02X%02X\n", c[0], c[1], d[0], d[1]);
-    printf("checksum OK = %d\n",checksum_ok);
+    //printf("checksum OK = %d\n",checksum_ok);
 
     if(length_ok*checksum_ok == 1 || bytes_received == 4){
         return bytes_received - 4;
@@ -144,14 +144,10 @@ int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_
         exit(EXIT_FAILURE);
     }
 
-    int bytes_received = recvfrom(sockfd, buf1, len+4, flags, src_addr, addrlen);
-    printf("ACK bytes received: %d\n", bytes_received);
-    if (bytes_received == -1) {
-        //perror("Error from ack_recv");
-        printf("Catching the error: Error %d %s\n", errno, strerror(errno));
-    }
+    recvfrom(sockfd, buf1, len+4, flags, src_addr, addrlen);
     strncpy(buf, buf1 + 4, 32); // Remove header from packet
-    return bytes_received - 4;
+
+    return errno;
 }
 
 

@@ -18,6 +18,7 @@ int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_
 //#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
 #define SIZE_OF_FILE 8192 // experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
+#define PACKET_RECEIVED "<PACKET RECEIVED>"
 
 // Function to generate a random alphanumeric character only with letters and numbers
 char random_alphanumeric() {
@@ -125,11 +126,11 @@ int main(int argc, char *argv[]) {
             }
 
             //Receive acK from receiver
-            //freopen("/dev/null", "w", stderr);
-            ack_recv(sockfd, ack_buf, 36, 0, (struct sockaddr*)&dest_addr,(socklen_t *)sizeof(dest_addr));
-            //fclose(stderr);
+            int error_number = ack_recv(sockfd, ack_buf, 36, 0, (struct sockaddr*)&dest_addr,(socklen_t *)sizeof(dest_addr));
 
-            printf("ACK packet = %s \n\n****************\n\n", ack_buf);
+            if(!(error_number != 11 && strcmp(ack_buf, PACKET_RECEIVED) == 0)){
+
+            }
 
          }
 
