@@ -15,7 +15,7 @@ void rudp_close(int sockfd);
 #define BUFFER_SIZE 2048 // The size of the buffer
 #define EXIT_MESSAGE "<exit>" // The exit massage
 #define PACKET_RECEIVED "<PACKET RECEIVED>"
-#define PROBABILITY_LOSS 0
+#define PROBABILITY_LOSS 0.5
 
 // Function to calculate the difference in time between start and end time
 double time_diff(struct timeval start, struct timeval end) {
@@ -83,6 +83,8 @@ int main(int argc, char *argv[]) {
 
     socklen_t addr_size = sizeof(client_addr);
 
+    char *isEOF = NULL;
+
     printf("----------------------------------\n");
     printf("-         * Statistics *         -\n");
     // Receive data until the sender closes the connection
@@ -95,10 +97,14 @@ int main(int argc, char *argv[]) {
         //sleep(2); // test feature: delay for triggering a timeout
         if(bytes_received > 0 && (double)rand() / (double)RAND_MAX > PROBABILITY_LOSS){
             rudp_send(sockfd, PACKET_RECEIVED, strlen(PACKET_RECEIVED), 0, (struct sockaddr *)&client_addr, addr_size);
+
+            //Symbol end of file
+            isEOF = strchr(buffer, '!');
         }
 
         else{
             bytes_received = 0;
+            isEOF = NULL;
         }
 
 
@@ -112,9 +118,6 @@ int main(int argc, char *argv[]) {
             total_received += bytes_received;
             all_run_receive += bytes_received;
         }
-
-        //Symbol end of file
-        char *isEOF = strchr(buffer, '!');
 
         //If we did not finish yet
         if ((isEOF != NULL && total_received > 0) && strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) != 0) {
