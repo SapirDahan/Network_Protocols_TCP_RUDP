@@ -10,10 +10,12 @@
 
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-//#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
-#define SIZE_OF_FILE 8192 // Experimental size
+#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+//#define SIZE_OF_FILE 8192 // Experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 #define PACKET_RECEIVED "<PACKET RECEIVED>"
+#define TIMEOUT_SEC 0
+#define TIMEOUT_US 1000
 
 // Function to generate a random alphanumeric character only with letters and numbers
 char random_alphanumeric() {
@@ -86,8 +88,8 @@ int main(int argc, char *argv[]) {
     struct timeval timeout;
 
     // Set timeout for receiving
-    timeout.tv_sec = 1;  // 1 seconds
-    timeout.tv_usec = 0; // 0 microseconds
+    timeout.tv_sec = TIMEOUT_SEC;
+    timeout.tv_usec = TIMEOUT_US;
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
         perror("setsockopt failed");
     }

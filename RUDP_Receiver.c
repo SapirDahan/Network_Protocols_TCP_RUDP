@@ -15,7 +15,7 @@ void rudp_close(int sockfd);
 #define BUFFER_SIZE 2048 // The size of the buffer
 #define EXIT_MESSAGE "<exit>" // The exit massage
 #define PACKET_RECEIVED "<PACKET RECEIVED>"
-#define PROBABILITY_LOSS 0.5
+#define PROBABILITY_LOSS 0
 
 // Function to calculate the difference in time between start and end time
 double time_diff(struct timeval start, struct timeval end) {

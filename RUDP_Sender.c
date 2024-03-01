@@ -15,8 +15,8 @@ void rudp_close(int sockfd);
 int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
-//#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
-#define SIZE_OF_FILE 8192 // experimental size
+#define SIZE_OF_FILE 2097152 // Size of the file (2MB)
+//#define SIZE_OF_FILE 8192 // experimental size
 #define EXIT_MESSAGE "<exit>" // Exit massage
 #define PACKET_RECEIVED "<PACKET RECEIVED>"
 

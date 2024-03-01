@@ -8,7 +8,8 @@
 #include <errno.h>
 
 #define BUFFER_SIZE1 2048
-#define TIMEOUT_SEC 1
+#define TIMEOUT_SEC 0
+#define TIMEOUT_US 1000
 
 
 int rudp_socket(int domain, int type, int protocol){
@@ -138,7 +139,7 @@ int ack_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_
     // Set timeout for the socket
     struct timeval timeout;
     timeout.tv_sec = TIMEOUT_SEC;
-    timeout.tv_usec = 0;
+    timeout.tv_usec = TIMEOUT_US;
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
         perror("Error setting socket timeout");
         exit(EXIT_FAILURE);
