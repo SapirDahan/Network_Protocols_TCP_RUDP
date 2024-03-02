@@ -113,7 +113,6 @@ int main(int argc, char *argv[]) {
         // Receive the data with the probability
         if ((double)rand() / RAND_MAX > PROBABILITY_LOSS) {
             send(new_sockfd, PACKET_RECEIVED, strlen(PACKET_RECEIVED),0);
-            //printf("%s\n\n", buffer);
 
             //Symbol end of file
             isEOF = strchr(buffer, '!');
@@ -134,9 +133,6 @@ int main(int argc, char *argv[]) {
             total_received += bytes_received;
             all_run_receive += bytes_received;
         }
-
-
-
 
         //If we did not finish yet
         if ((isEOF != NULL && total_received > 0) && strncmp(buffer, EXIT_MESSAGE, strlen(EXIT_MESSAGE)) != 0) {

@@ -94,7 +94,6 @@ int main(int argc, char *argv[]) {
         bytes_received = rudp_recv(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &addr_size);
 
         // Send packet received ack with probability
-        //sleep(2); // test feature: delay for triggering a timeout
         if(bytes_received > 0 && (double)rand() / (double)RAND_MAX > PROBABILITY_LOSS){
             rudp_send(sockfd, PACKET_RECEIVED, strlen(PACKET_RECEIVED), 0, (struct sockaddr *)&client_addr, addr_size);
 
@@ -142,18 +141,11 @@ int main(int argc, char *argv[]) {
         bytes_received = 0;
     }
 
-
-    if (bytes_received < 0) {
-        perror("Receive failed");
-    }
-
-        //Print averages
-    else {
-        printf("- Average time: %.2f ms\n", total_time/(run_number - 1));
-        printf("- Average bandwidth: %.2f MB/s\n", (double)all_run_receive/(total_time*1000));
-        printf("----------------------------------\n");
-        printf("\nReceiver ended\n");
-    }
+    //Print averages
+    printf("- Average time: %.2f ms\n", total_time/(run_number - 1));
+    printf("- Average bandwidth: %.2f MB/s\n", (double)all_run_receive/(total_time*1000));
+    printf("----------------------------------\n");
+    printf("\nReceiver ended\n");
 
 
     //Close socket

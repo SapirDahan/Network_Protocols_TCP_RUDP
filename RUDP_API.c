@@ -64,12 +64,14 @@ unsigned short int calculate_checksum(void *data, unsigned int bytes) {
 int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
 
     // Creating the header
-    char new_buffer[BUFFER_SIZE1+4];
-    char* bytes01 = int_to_2_char_string((int)len);
-    char* bytes23 = int_to_2_char_string((int) calculate_checksum((void*)buf, (int)len));
-    char header[5] = "0123"; // Placeholder
+    char new_buffer[BUFFER_SIZE1+4]; // Make room for the header
+    char* bytes01 = int_to_2_char_string((int)len); // generate length in 16 bits
+    char* bytes23 = int_to_2_char_string((int) calculate_checksum((void*)buf, (int)len)); // generate checksum in 16 bits
+    char header[5] = "0123"; // header placeholder
     strcpy(new_buffer, header);
     strcat(new_buffer, buf);
+
+    // Placing length and checksum at the header
     new_buffer[0] = bytes01[0];
     new_buffer[1] = bytes01[1];
     new_buffer[2] = bytes23[0];
@@ -83,7 +85,8 @@ int rudp_send(int sockfd, const char *buf, size_t len, int flags, const struct s
         perror("rudp_send");
     }
 
-    return bytes_sent-4;
+    // Bytes without the header
+    return bytes_sent - 4;
 }
 
 int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) {
@@ -104,6 +107,7 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src
     header_checksum[2] = '\0';
     strncpy(buf, buf1 + 4, BUFFER_SIZE1); // Remove header from packet
 
+    // Check if the packet is data or command
     char first_char_in_packet = (char)buf1[4];
     int command = 0;
     if (first_char_in_packet == '<') {
@@ -112,17 +116,13 @@ int rudp_recv(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src
 
 
     // Check packet integrity
-    char* a = int_to_2_char_string((int)len);
-    char* b = header_length;
-    int length_ok = (((a[0] == b[0]) && (a[1] == b[1])) || (command == 1)) ? 1 : 0;
-    //printf("\n*****\nexpected: %02X%02X\nreceived %02X%02X\n", a[0], a[1], b[0], b[1]);
-    //printf("length OK = %d\n",length_ok);
+    char* recv_len = int_to_2_char_string((int)len);
+    char* header_len = header_length;
+    int length_ok = (((recv_len[0] == header_len[0]) && (recv_len[1] == header_len[1])) || (command == 1)) ? 1 : 0;
 
-    char* c = int_to_2_char_string((int)calculate_checksum((void*)buf, len));
-    char* d = header_checksum;
-    int checksum_ok = ((c[0] == d[0]) && (c[1] == d[1])) ? 1 : 0;
-    //printf("expected: %02X%02X\nreceived %02X%02X\n", c[0], c[1], d[0], d[1]);
-    //printf("checksum OK = %d\n",checksum_ok);
+    char* calculated_sum = int_to_2_char_string((int)calculate_checksum((void*)buf, len));
+    char* header_sum = header_checksum;
+    int checksum_ok = ((calculated_sum[0] == header_sum[0]) && (calculated_sum[1] == header_sum[1])) ? 1 : 0;
 
     if(length_ok*checksum_ok == 1 || bytes_received == 4){
         return bytes_received - 4;

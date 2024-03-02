@@ -11,9 +11,8 @@
 
 #define BUFFER_SIZE 2048 // Use a buffer large enough to send data efficiently
 #define SIZE_OF_FILE 2097152 // Size of the file (2MB)
-//#define SIZE_OF_FILE 8192 // Experimental size
-#define EXIT_MESSAGE "<exit>" // Exit massage
-#define PACKET_RECEIVED "<PACKET RECEIVED>"
+#define EXIT_MESSAGE "<exit>" // Exit message
+#define PACKET_RECEIVED "<PACKET RECEIVED>" // ACK message
 #define TIMEOUT_SEC 0
 #define TIMEOUT_US 1000
 
@@ -97,7 +96,6 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in dest_addr; // The address of the receiver
     dest_addr.sin_family = AF_INET; // Using IPV4
     dest_addr.sin_port = htons(port);
-
     if (inet_pton(AF_INET, ip, &dest_addr.sin_addr) <= 0) {
         fprintf(stderr, "Invalid address/ Address not supported \n");
         close(sockfd);
@@ -105,13 +103,11 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Waiting for TCP connection...\n");
-
     if (connect(sockfd, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
         perror("Connection Failed\n");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
-
     else{
         printf("Receiver connected, beginning to sending file...\n");
     }
@@ -160,7 +156,7 @@ int main(int argc, char *argv[]) {
             total_sent += bytes_sent;
         }
 
-
+        //return to the beginning of the file
         fseek(file_to_read, 0, SEEK_SET);
 
         //The byte sent
